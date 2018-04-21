@@ -1,4 +1,4 @@
-batAermod <- function(name, x, stage, folder = NULL, demo = FALSE){
+batAermod <- function(name, x, stage, folder = NULL, demo = FALSE, run = FALSE){
   # Create a bat file for execute multiples inputs aermod
   #
   # Args:
@@ -37,12 +37,12 @@ batAermod <- function(name, x, stage, folder = NULL, demo = FALSE){
             "REM CREAR DIRECTORIO DE SALIDAS",
             "MKDIR ..\\out",
             "REM COPIAR RECEPTORES",
-            paste0("COPY ..\\..\\2_aermap\\", out,
+            paste0("COPY ..\\..\\aermap\\", out,
                    "\\", name, "_RECEPTOR.ROU RECEPTOR.ROU"),
             "REM COPIAR ARCHIVOS AERMET",
-            paste0("COPY ..\\..\\3_aermet\\out",
+            paste0("COPY ..\\..\\aermet\\out",
                    "\\", name, "_SURFACE.SFC SURFACE.SFC"),
-            paste0("COPY ..\\..\\3_aermet\\out",
+            paste0("COPY ..\\..\\aermet\\out",
                    "\\", name, "_PROFILE.PFL SURFACE.PFL"),
             "REM")
   Body <- list()
@@ -89,4 +89,9 @@ batAermod <- function(name, x, stage, folder = NULL, demo = FALSE){
   Body <- unlist(Body)
   writeLines(c(Head, Body), file.run)
   close(file.run)
+  if(run){
+    folder.current <- getwd()
+    setwd(paste0(folder.current, "/", folder))
+    system("cmd.exe", input = paste0("AERMOD_", name, ".BAT"))
+  }
 }
