@@ -1,4 +1,4 @@
-BatAermod <- function(name, x, stage, folder = NULL, demo = FALSE){
+batAermod <- function(name, x, stage, folder = NULL, demo = FALSE){
   # Create a bat file for execute multiples inputs aermod
   #
   # Args:
