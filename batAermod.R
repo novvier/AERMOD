@@ -43,7 +43,7 @@ batAermod <- function(name, x, stage, folder = NULL, demo = FALSE, run = FALSE){
             paste0("COPY ..\\..\\aermet\\out",
                    "\\", name, "_SURFACE.SFC SURFACE.SFC"),
             paste0("COPY ..\\..\\aermet\\out",
-                   "\\", name, "_PROFILE.PFL SURFACE.PFL"),
+                   "\\", name, "_PROFILE.PFL PROFILE.PFL"),
             "REM")
   Body <- list()
   body.text <- function(x, name, stage, demo = FALSE){
@@ -93,5 +93,6 @@ batAermod <- function(name, x, stage, folder = NULL, demo = FALSE, run = FALSE){
     folder.current <- getwd()
     setwd(paste0(folder.current, "/", folder))
     system("cmd.exe", input = paste0("AERMOD_", name, ".BAT"))
+    setwd(folder.current)
   }
 }
