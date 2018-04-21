@@ -1,4 +1,4 @@
-BatAermod <- function(x, name, stage, demo = FALSE){
+BatAermod <- function(name, x, stage, folder = NULL, demo = FALSE){
   # Create a bat file for execute multiples inputs aermod
   #
   # Args:
@@ -27,7 +27,7 @@ BatAermod <- function(x, name, stage, demo = FALSE){
     out = "out"
     modelo = "AERMOD"
   }
-  file.run <- file(paste0("AERMOD_", name, ".BAT"))
+  file.run <- file(paste0(folder, "AERMOD_", name, ".BAT"))
   #---
   Head <- c("echo MODEL > time.txt",
             "REM ***********************************",
