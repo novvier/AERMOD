@@ -1,12 +1,14 @@
-batAermod <- function(name, x, stage, folder = NULL, demo = FALSE, run = FALSE){
+batAermod <- function(name, x, stage, type = 1, name2 = "",
+                      folder = "model/aermod/inp/", run = FALSE){
   # Create a bat file for execute multiples inputs aermod
   #
   # Args:
-  #   x     :  a verctor of pollutants. Example: c("PM10", "SO2")
-  #   name  :  name of projecto
-  #   stage ;  stages of model. Example: 2 (construction and operation) 
-  #   demo  :  TRUE if the run model is only demo receptors
-  #
+  #   x     : a verctor of pollutants. Example: c("PM10", "SO2")
+  #   name  : name of projecto
+  #   stage ; stages of model. Example: 2 (construction and operation) 
+  #   type  : 0 = run dem; 1 = run defoutl; 2 = second run
+  #   run   : TRUE run model; FALSE not run model
+  # demo
   # Return:
   #   file *.bat whith lines run of AERMOD 
   #
@@ -15,35 +17,43 @@ batAermod <- function(name, x, stage, folder = NULL, demo = FALSE, run = FALSE){
   #   BatAermod(c("PM10", "CO"), "CEMPIU", 3, demo = TRUE)
   #
   x <- toupper(x)
-  if (stage == 0 | stage == 1) {
-    stage = 0
-  } else {
-    stage = 1:stage
-  }
-  if(demo){
+  if (type == 0) {
     out = "out_demo"
     modelo ="AERMOD_DEMO"
-  } else {
+    demo = TRUE
+    kind = "_DEMO"
+    map = "_DEMO"
+  } else if (type == 1) {
     out = "out"
     modelo = "AERMOD"
+    demo = FALSE
+    kind = ""
+    map = ""
+  } else if (type == 2) {
+    out = "out"
+    modelo = "AERMOD_2"
+    demo = FALSE
+    kind = "_2"
+    map = ""
   }
-  file.run <- file(paste0(folder, "AERMOD_", name, ".BAT"))
+  file.run <- file(paste0(folder, "AERMOD_", name, kind, name2, ".BAT"))
   #---
-  Head <- c("echo MODEL > time.txt",
+  Head <- c("REM STAR",
+            paste0("echo MODEL > TIME", kind, name2, ".txt"),
             "REM ***********************************",
             paste0("REM EJECUTAR MODELO AERMOD - ", name),
             "REM ***********************************",
             "REM",
             "REM CREAR DIRECTORIO DE SALIDAS",
-            "MKDIR ..\\out",
+            paste0("MKDIR ..\\out", tolower(kind)),
             "REM COPIAR RECEPTORES",
-            paste0("COPY ..\\..\\aermap\\", out,
-                   "\\", name, "_RECEPTOR.ROU RECEPTOR.ROU"),
+            paste0("COPY ..\\..\\aermap\\out",
+                   "\\RECEPTOR_", name, map, ".ROU RECEPTOR.ROU"),
             "REM COPIAR ARCHIVOS AERMET",
             paste0("COPY ..\\..\\aermet\\out",
-                   "\\", name, "_SURFACE.SFC SURFACE.SFC"),
+                   "\\SURFACE_", name, ".SFC SURFACE.SFC"),
             paste0("COPY ..\\..\\aermet\\out",
-                   "\\", name, "_PROFILE.PFL PROFILE.PFL"),
+                   "\\PROFILE_", name, ".PFL PROFILE.PFL"),
             "REM")
   Body <- list()
   body.text <- function(x, name, stage, demo = FALSE){
@@ -52,14 +62,14 @@ batAermod <- function(name, x, stage, folder = NULL, demo = FALSE, run = FALSE){
     } else {
       out = "out"
     }
-    fol <- paste0(stage, "_", x) 
+    fol <- paste0(stage, "_", x)
     inp <- paste0(name, fol)
     Body <- c("REM ***********************************",
               paste0("REM ESCENARIO ", stage, " - ", x),
               "REM ***********************************",
               "REM",
-              paste0("echo ", stage, x, " >> time.txt"),
-              "echo %time% >> time.txt",
+              paste0("echo ", stage, x, " >> TIME", kind, name2, ".txt"),
+              paste0("echo %time% >> TIME", kind, name2, ".txt"),
               "REM",
               paste0("MKDIR ..\\", out, "\\STG", fol),
               paste0("MKDIR ..\\", out, "\\STG", fol, "\\OUT"),
@@ -77,17 +87,26 @@ batAermod <- function(name, x, stage, folder = NULL, demo = FALSE, run = FALSE){
               paste0("REN *. *_", inp, ".PLT"),
               paste0("MOVE *.PLT ..\\", out, "\\STG", fol, "\\PLT\\"),
               "REM",
-              "echo %time% >> time.txt",
+              paste0("echo %time% >> TIME", kind, name2, ".txt"),
               "REM")
     return(Body)
   }
+  Tail <- c("REM ***********************************",
+            "REM BORRAR INPUTS DEFAULT",
+            "REM ***********************************",
+            "REM",
+            "DEL SURFACE.SFC",
+            "DEL PROFILE.PFL",
+            "DEL RECEPTOR.ROU",
+            "DEL AERMOD.INP",
+            "REM END")
   for (j in 1:NROW(stage)){
     for (i in 1:NROW(x)){
       Body[[(NROW(x)*j+i)]] <- body.text(x[i], name, stage[j], demo)
     }
   }
   Body <- unlist(Body)
-  writeLines(c(Head, Body), file.run)
+  writeLines(c(Head, Body, Tail), file.run)
   close(file.run)
   if(run){
     folder.current <- getwd()
@@ -96,3 +115,8 @@ batAermod <- function(name, x, stage, folder = NULL, demo = FALSE, run = FALSE){
     setwd(folder.current)
   }
 }
+cat("\"batAermod\" has load\n")
+#batAermod("CEMPIU",
+#          c("pm10", "pm25", "co", "no2", "so2"),
+#          0,
+#          "model/aermod/inp/")
